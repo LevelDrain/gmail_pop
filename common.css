@@ -1,0 +1,23 @@
+.box-send {
+    padding: .5em 1em;
+    margin: 1em 0;
+    border: solid 1px #4ec4d3;
+    width: 900px;
+}
+
+.box-send p {
+    margin: 0;
+    padding: 0;
+}
+
+.box-reply {
+    padding: .5em 1em;
+    margin: 1em 0;
+    border: double 4px #4ec4d3;
+    width: 900px;
+}
+
+.box-reply p {
+    margin: 0;
+    padding: 0;
+}

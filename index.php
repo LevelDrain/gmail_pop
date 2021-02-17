@@ -1,6 +1,9 @@
 <?php
-$cfg['GMAIL_ACCOUNT'] = '';//Gmailのメールアドレス
-$cfg['GMAIL_PASSWORD'] = '';//Gmailのパスワード
+require 'db.php';
+$db = db_connect();
+
+$cfg['GMAIL_ACCOUNT'] = 'mymail@gmail.com';//Gmailのメールアドレス
+$cfg['GMAIL_PASSWORD'] = 'pw';//Gmailのパスワード
 //Gmailの接続情報
 $cfg['MAILBOX'] = '{imap.gmail.com:993/imap/ssl}';
 ?>
@@ -23,16 +26,28 @@ $mbox = imap_open($cfg['MAILBOX'], $cfg['GMAIL_ACCOUNT'], $cfg['GMAIL_PASSWORD']
 if ($mbox == false) {
     echo 'Gmailへの接続に失敗しました';
 } else {
-    $mailIds = imap_search($mbox, 'FROM "...@kcg.ac.jp"');//送信者メールアドレス
+    $mailIds = imap_search($mbox, 'FROM "send@send.com"');//送信者メールアドレス
 
     foreach ($mailIds as $mailId) {
         $header = imap_headerinfo($mbox, $mailId);
-        $subject = getSubject($header);
+        $Date = mb_strcut($header->date, 0, 25);
+        $Date = date("Y-m-d H:i:s", strtotime($Date));
+        echo($Date);
+
+        $subject = getSubject($header);//メールタイトル
         echo $mailId . ' : ' . $subject . '<br>';
 
         $body = getBody($mbox, $mailId);
-        $trimedBody = strstr($body, 'From: Samuraki Yuki', true);//返信履歴の切り落とし
-        echo '<br>' . $trimedBody . '<br>';
+        $trimedBody = strstr($body, '送信者著名', true) . '送信者著名';//返信履歴の切り落とし
+        echo '<p>' . $trimedBody . '</p>';
+
+        //DBへの書き込み
+        $query = $db->prepare('INSERT INTO list (mail_id,title,subject,date) VALUES (:mail_id,:title,:subject,:date)');
+        $query->bindParam(':mail_id', $mailId, PDO::PARAM_STR);
+        $query->bindParam(':title', $subject, PDO::PARAM_STR);
+        $query->bindParam(':subject', $trimedBody, PDO::PARAM_STR);
+        $query->bindParam(':date', $Date, PDO::PARAM_STR);
+        $query->execute();
     }
     imap_close($mbox);
 }
